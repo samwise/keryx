@@ -1,3 +1,4 @@
+# projects info
 project('tutorial','cpp')
 
 # internal dependencies

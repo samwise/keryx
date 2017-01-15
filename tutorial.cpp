@@ -10,8 +10,8 @@ int main (int argc, char *argv[])
     return 1;
   }
 
-  double inputValue = atof(argv[1]);
-  double outputValue = mysqrt(inputValue);
+  auto inputValue = atof(argv[1]);
+  auto outputValue = mysqrt(inputValue);
   fprintf(stdout,"The square root of %g is %g\n",
           inputValue, outputValue);
   return 0;
