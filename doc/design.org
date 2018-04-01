@@ -1,0 +1,78 @@
+* Glossary
+- sid: stream id
+- cookie: opaque object meaningfull only for the node that created it
+  when subscribing to a stream, returned unchanged in notifications
+- data: opaque notification data 
+- ad: advertisement for a stream
+- nid: node id
+- nq: notification queue
+- nqid: notification queue id 
+- node: a node
+* Main abstractions
+** Node[Router] 
+*** Desc
+A user provided handler of keryx events
+*** Consumes
+ - not(sid,cookie,data)
+ - loss(sid,cookie)
+ - adv(sid,ad)
+ - unadv(sid)
+ - sub_ack(sid,cookie)
+ - unsub_ack(sid,cookie)
+ - init
+ - finit
+*** Produces 
+ - adv(sid,ad)
+ - unadv(sid)
+ - not(sid,data)
+ - sub(sid,cookie)
+ - unsub(sid)
+** Router
+*** Desc
+Routes events to a set of nodes 
+*** Consumes
+- not(sid,data)
+- loss(sid)
+- sub(sid,nid,cookie)
+- unsub(sid,nid)
+- adv(sid,ad)
+- unadv(sid)
+- add_node(nid,node)
+- remove_node(nid)
+*** Produces 
+- not(sid,cookie,data)
+- loss(sid,cookie)
+- adv(sid,ad)
+- unadv(sid)
+- sub_ack(sid,cookie)
+- unsub_ack(sid,cookie)
+- init
+- finit
+** NotificationParser[NotificationQueue] 
+*** Desc
+Parses raw notifications from a single NotificationQueue
+*** Consumes
+- not_fragment(sid,seq_n,data)
+- sub(sid)
+- unsub(sid)
+*** Produces
+- not(sid,data)
+- loss(sid)
+** Controller [ControlQueue]
+*** Desc
+Processes control queue events, manages the life cycle of
+NotiticationParser instances
+*** Consumes
+- sub(sid,nid,cookie)
+- unsub(sid,nid)
+- adv(sid,ad)
+- unadv(sid)
+- add_node(nid,node)
+- remove_node(nid)
+- add_nq(nqid,nq)
+- remove_nq(nqid)
+
+ 
+  
+
+** TopicFinder
