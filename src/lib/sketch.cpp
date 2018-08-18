@@ -1,8 +1,9 @@
 #include<string>
+#include "f.h"
 
 namespace keryx {
 
-int f() {return 1;}
+int g() {return freaking_awesome() * 1;}
 
 }
 
