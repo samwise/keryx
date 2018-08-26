@@ -1,20 +1,21 @@
 cmake_minimum_required(VERSION 2.8)
 project(keryx)
 
-set (FLAGS "${CMAKE_CXX_FLAGS_DEBUG}") 
-set (FLAGS "${FLAGS} -Wall")
-set (FLAGS "${FLAGS} -pedantic")
-set (FLAGS "${FLAGS} -Wextra")
-set (FLAGS "${FLAGS} -Werror")
-set (FLAGS "${FLAGS} --std=c++1y")
-set (FLAGS "${FLAGS} -fdiagnostics-color")
+# compilation options
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -pedantic -Wextra -Werror --std=c++1y -fdiagnostics-color") 
+set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_DEBUG} -DNDEBUG -O3")
 
-set (CMAKE_CXX_FLAGS_DEBUG "${FLAGS}")
-set (CMAKE_CXX_FLAGS_RELEASE "${FLAGS} -DNDEBUG -O3")
-
-file(GLOB LIB_SOURCES "src/lib/*.cpp")
+# lib
+file(GLOB_RECURSE LIB_SOURCES src/lib/*.cpp)
 add_library(libkeryx SHARED ${LIB_SOURCES})
 
-file(GLOB SOURCES "src/main.cpp")
-add_executable(keryx ${SOURCES})
+# test executable
+file(GLOB EXE_SOURCES "src/*.cpp")
+add_executable(keryx ${EXE_SOURCES})
+target_include_directories(keryx PUBLIC ${CMAKE_SOURCE_DIR}/src/lib )
 target_link_libraries(keryx libkeryx)
+
+# helpers to make it safe to use globing to define files in build
+include(tools/safe_dep_glob.cmake)
+update_deps_file("${LIB_SOURCES};${EXE_SOURCES}")
+
