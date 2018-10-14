@@ -1,13 +1,19 @@
 [
 {
   "directory": "/home/ppinto/Dropbox/projects/keryx/build/clang_debug",
-  "command": "/usr/lib/ccache/clang++  -Dlibkeryx_EXPORTS  -g -Wall -pedantic -Wextra -Werror --std=c++1y -fdiagnostics-color -fPIC   -o CMakeFiles/libkeryx.dir/src/lib/ring_buffer/ring_buffer.cpp.o -c /home/ppinto/Dropbox/projects/keryx/src/lib/ring_buffer/ring_buffer.cpp",
+  "command": "/usr/lib/ccache/clang++  -Dlibkeryx_EXPORTS  -g -Wall -pedantic -Wextra -Werror --std=c++17 -fdiagnostics-color -fPIC   -o CMakeFiles/libkeryx.dir/src/lib/ring_buffer/ring_buffer.cpp.o -c /home/ppinto/Dropbox/projects/keryx/src/lib/ring_buffer/ring_buffer.cpp",
   "file": "/home/ppinto/Dropbox/projects/keryx/src/lib/ring_buffer/ring_buffer.cpp"
 },
 
 {
   "directory": "/home/ppinto/Dropbox/projects/keryx/build/clang_debug",
-  "command": "/usr/lib/ccache/clang++   -I../../src/lib  -g -Wall -pedantic -Wextra -Werror --std=c++1y -fdiagnostics-color   -o CMakeFiles/keryx.dir/src/main.cpp.o -c /home/ppinto/Dropbox/projects/keryx/src/main.cpp",
+  "command": "/usr/lib/ccache/clang++  -Dlibkeryx_EXPORTS  -g -Wall -pedantic -Wextra -Werror --std=c++17 -fdiagnostics-color -fPIC   -o CMakeFiles/libkeryx.dir/src/lib/simple/simple.cpp.o -c /home/ppinto/Dropbox/projects/keryx/src/lib/simple/simple.cpp",
+  "file": "/home/ppinto/Dropbox/projects/keryx/src/lib/simple/simple.cpp"
+},
+
+{
+  "directory": "/home/ppinto/Dropbox/projects/keryx/build/clang_debug",
+  "command": "/usr/lib/ccache/clang++   -I../../src/lib  -g -Wall -pedantic -Wextra -Werror --std=c++17 -fdiagnostics-color   -o CMakeFiles/keryx.dir/src/main.cpp.o -c /home/ppinto/Dropbox/projects/keryx/src/main.cpp",
   "file": "/home/ppinto/Dropbox/projects/keryx/src/main.cpp"
 }
 ]

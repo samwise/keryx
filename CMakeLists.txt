@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 project(keryx)
 
 # compilation options
-set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -pedantic -Wextra -Werror --std=c++1y -fdiagnostics-color") 
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -pedantic -Wextra -Werror --std=c++17 -fdiagnostics-color") 
 set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_DEBUG} -DNDEBUG -O3")
 
 # lib
