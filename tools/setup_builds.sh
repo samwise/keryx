@@ -12,18 +12,16 @@ cd clang_debug
 cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_CXX_COMPILER=/usr/lib/ccache/clang++ ../..
 cd ..
 
-# rm -rf gcc_debug
-# mkdir gcc_debug
-# cd gcc_debug
-# cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=/usr/lib/ccache/g++ ../..
-# cd ..
+rm -rf gcc_debug
+mkdir gcc_debug
+cd gcc_debug
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_COMPILER=/usr/lib/ccache/g++ ../..
+cd ..
 
-# rm -rf gcc_release
-# mkdir gcc_release
-# cd gcc_release
-# cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_CXX_COMPILER=g++ ../..
-# cd ..
+rm -rf gcc_release
+mkdir gcc_release
+cd gcc_release
+cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_CXX_COMPILER=g++ ../..
 
-(cd .. && ln -sf build/clang_debug/compile_commands.json .)
 
 

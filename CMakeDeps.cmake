@@ -1,1 +1,1 @@
-set(sources /home/ppinto/Dropbox/projects/keryx/src/lib/ring_buffer/ring_buffer.cpp;/home/ppinto/Dropbox/projects/keryx/src/lib/simple/simple.cpp;/home/ppinto/Dropbox/projects/keryx/src/main.cpp)
+set(sources /home/ppinto/Dropbox/projects/keryx/src/lib/ring_buffer/ring_buffer.cpp;/home/ppinto/Dropbox/projects/keryx/src/main.cpp)
