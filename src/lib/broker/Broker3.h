@@ -4,6 +4,7 @@
 #include <functional>
 #include <inplace_function.h>
 #include <memory>
+#include <moodycamel/readerwriterqueue.h>
 #include <mpmc_bounded_queue.h>
 #include <mutex>
 #include <vector>
@@ -12,7 +13,6 @@
 
 // Open issues:
 // - late join
-// - full queue and deadlocks
 // - use of neighbour in subscription to avoid forwarding subs that
 //   are not needed
 // - request/reply
@@ -26,18 +26,8 @@ using BrokerAction = stdext::inplace_function<void(B &), 128>;
 
 template <class EV, class Broker> struct EventRecord {
    std::vector<std::pair<SubID, Handler<EV>>> local_handlers;
+   std::vector<Queue *> remote_handlers;
    std::atomic<SubID> next_handler_id = 1;
-
-   template <class C> void sub(SubID sid, C const &c) {
-      local_handlers.emplace_back(sid, Handler<EV>(c));
-   }
-
-   void unsub(SubID id) {
-      auto it = std::find_if(local_handlers.begin(), local_handlers.end(),
-                             [id](auto p) { return p.first == id; });
-      if (it != local_handlers.end())
-         local_handlers.erase(it);
-   }
 };
 
 template <typename... E> struct Broker {
@@ -50,51 +40,95 @@ template <typename... E> struct Broker {
    }
 
    EventRecordTuple event_records;
-   spdlog::details::mpmc_bounded_queue<BrokerAction<Broker>> notification_queue;
-   std::vector<Broker *> neighbours;
 
-   Broker() : event_records(), notification_queue(1024), neighbours() {}
+   using Queue = moodycamel::ReaderWriterQueue<BrokerAction<Broker>>;
+   std::vector<std::pair<Broker *, Queue *>> out;
+   std::vector<std::unique_ptr<Queue>> in;
+   Queue *self_queue;
+
+   Broker() : event_records(), out(), in(), self_queue() {}
 
    template <class EV> void publish(EV const &ev) {
 
-      for (auto n : neighbours) {
-         BrokerAction<Broker> nt = [ev](Broker &b) {
-            auto &handlers = b.template get<EV>().local_handlers;
-            for (auto &h : handlers)
-               h.second(ev);
-         };
-         n->enqueue(nt);
-      }
+      BrokerAction<Broker> nt = [ev](Broker &b) {
+         auto &handlers = b.template get<EV>().local_handlers;
+         for (auto &h : handlers)
+            h.second(ev);
+      };
+      self_queue->enqueue(nt);
+      for (auto const &q : get<EV>().remote_handlers)
+         q->enqueue(nt);
    }
 
    void add_neighbour(std::initializer_list<Broker *> const &brokers) {
-      for (auto n : brokers)
-         neighbours.push_back(n);
+      for (auto b : brokers)
+         if (b != this) {
+            auto &q = b->in.emplace_back(new Queue());
+            out.push_back(std::make_pair(&b, &q));
+         }
+      auto &q = in.emplace_back(new Queue());
+      self_queue = q.get();
    }
 
    void do_work() {
       BrokerAction<Broker> nt;
-      while (dequeue(nt))
-         nt(*this);
+      for (auto &q : in)
+         while (q->try_dequeue(nt))
+            nt(*this);
    }
 
    template <class EV, class C> SubID subscribe(C const &c) {
       auto id = get<EV>().next_handler_id++;
-      enqueue([c, id](Broker &self) { self.get<EV>().sub(id, c); });
+
+      self_queue->enqueue([c, id](Broker &self) {
+         // local sub
+         auto &er = self.get<EV>();
+         er.local_handlers.push_back(std::make_pair(id, c));
+
+         // first sub, forward to neighbours
+         if (er.local_landers.size() == 1) {
+            for (auto &p : out) {
+               auto q = p.second;
+               q->enqueue([self](Broker &b) {
+                  auto it = std::find_if(
+                      b.out.begin(), b.out.end(),
+                      [self](auto &nb) { return nb.first == self; });
+                  auto src_q = it->second;
+                  auto &er = b.get<EV>();
+                  er.remote_handlers.push_back(src_q);
+               });
+            }
+         }
+      });
       return id;
    }
 
    template <class EV> void unsubscribe(SubID id) {
-      enqueue([id](Broker &self) { self.get<EV>().unsub(id); });
-   }
+      self_queue->enqueue([id](Broker &self) {
+         auto &er = self.get<EV>();
+         auto it = std::find_if(er.local_handlers.begin(), er.local_handlers.end(),
+                                [id] (auto &p) {return p.first == id;}); 
+         if (it != er.local_handlers.end())
+            er.local_handlers.erase(it);
 
-   void enqueue(BrokerAction<Broker> const &n) {
+         // if last sub fwd unsub
+         if (er.local_handlers.empty()) {
+            for (auto &p : out) {
+               auto q = p.second;
+               q->enqueue([self](Broker &b) {
+                  auto it = std::find_if(
+                     b.out.begin(), b.out.end(),
+                     [self](auto &nb) { return nb.first == self; });
+                  auto src_q = it->second;
+                  auto &er = b.get<EV>();
+                  auto it2 = st
 
-      notification_queue.enqueue(n);
-   }
-
-   bool dequeue(BrokerAction<Broker> &n) {
-      return notification_queue.dequeue(n);
+                     
+                  er.remote_handlers.push_back(it->second);
+                  });
+            }
+         }
+      });
    }
 };
 
