@@ -1,4 +1,4 @@
-# keryx
+# Keryx
 A high performance event distribution system.
 
 Keryx is a event distribution system, that is a set of libraries and
