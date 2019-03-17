@@ -67,6 +67,7 @@ std::unique_ptr<SnapshotHandler> make_snapshot_handler(SnapshotPolicy policy) {
    case SnapshotPolicy::CACHE_HASH:
       return std::make_unique<CacheHash>();
    }
+   return std::unique_ptr<SnapshotHandler> ();
 }
 
 } // namespace keryx

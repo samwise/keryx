@@ -5,7 +5,7 @@ namespace keryx {
 class Consumer {
  public:
    ProducerFilter filter;
-   MessageHandler on_message;
+   NotificationHandler notify;
 };
 
 }

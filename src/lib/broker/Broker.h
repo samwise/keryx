@@ -1,22 +1,20 @@
 #pragma once
-#include "../utils/allocators.h"
 #include "broker_common.h"
 
 namespace keryx {
 
-class IProducerTypeDescriptor;
+class ProducerTypeRegistry;
 
 class Broker {
  public:
-   Broker();
+   Broker(ProducerTypeRegistry &);
    ~Broker();
 
-   Producer &make_producer(Topic const &, IProducerTypeDescriptor &,
-                           std::vector<EventPtr> const & initial = {});
-   void send_event(Producer &, EventPtr const &);
+   Producer &make_producer(Topic const &, std::vector<EventPtr> const & initial = {});
+   void publish(Producer &, EventPtr const &);
    void destroy_producer(Producer &);
 
-   Consumer &make_consumer(ProducerFilter const &, MessageHandler const &);
+   Consumer &make_consumer(ProducerFilter const &, NotificationHandler const &);
    void destroy_consumer(Consumer &);
 
  private:

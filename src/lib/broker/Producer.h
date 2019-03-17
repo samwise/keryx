@@ -4,14 +4,15 @@
 namespace keryx {
 class Producer {
  public:
-   Producer(Topic const &t, IProducerTypeDescriptor &desc,
+   Producer(ProducerType const &,
+            Topic const&,
             std::vector<EventPtr> const &initial_snapshot,
             std::vector<std::unique_ptr<Consumer>> const &consumers);
 
    ~Producer() ;
    void maybe_add(Consumer &) ;
    void maybe_remove(Consumer &);
-   void send_event(EventPtr const &);
+   void publish(EventPtr const &);
 
  private:
    bool is_match(ProducerFilter const &);
