@@ -23,13 +23,14 @@ set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_DEBUG} \
 # lib
 file(GLOB_RECURSE LIB_SOURCES src/lib/*.cpp)
 add_library(libkeryx SHARED ${LIB_SOURCES})
+target_link_libraries(libkeryx boost_container)
 target_include_directories(libkeryx PUBLIC ${CMAKE_SOURCE_DIR}/src)
 
-# tesiit executable
+# executable
 file(GLOB EXE_SOURCES "src/*.cpp")
 add_executable(keryx ${EXE_SOURCES})
 target_include_directories(keryx PUBLIC ${CMAKE_SOURCE_DIR}/src)
-target_link_libraries(keryx libkeryx benchmark pthread)
+target_link_libraries(keryx libkeryx benchmark boost_container pthread)
 
 # helpers to make it safe to use globing to define files in build
 include(tools/safe_dep_glob.cmake)

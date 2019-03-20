@@ -15,5 +15,5 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
  libc6-dbg \
  libclang-dev \
  ninja-build \
- libboost-dev 
+ libboost-all-dev 
 

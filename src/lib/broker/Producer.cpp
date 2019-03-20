@@ -43,8 +43,9 @@ Producer::~Producer() {
 void Producer::maybe_add(Consumer &c) {
    if (is_match(c.filter)) {
       me->consumers.push_back(&c);
+
       Notification m = {NotificationKind::START_PRODUCER,
-                        me->snapshot_handler->get_snapshot(), me->id,
+                        {}, me->id,
                         me->topic};
       c.notify(m);
    }
@@ -57,7 +58,7 @@ void Producer::maybe_remove(Consumer &c) {
       me->consumers.erase(it);
 }
 
-void Producer::publish(EventPtr const &ev) {
+void Producer::publish(EventPtr ev ) {
    auto m = Notification{NotificationKind::EVENT, {ev}, me->id, me->topic};
    for (auto const &ev : m.events)
       me->snapshot_handler->add_new_event(me->type.hash_event(*ev), ev);

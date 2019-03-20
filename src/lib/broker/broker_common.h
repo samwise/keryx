@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <functional>
+#include "../utils/allocators.h"
 
 namespace keryx {
 
@@ -18,7 +19,7 @@ struct Error {
 enum class SnapshotPolicy { NO_SNAPSHOT, CACHE_LAST, CACHE_ALL, CACHE_HASH };
 enum class NotificationKind { START_PRODUCER,EVENT,STOP_PRODUCER };
 
-using EventPtr = std::shared_ptr<const Event>;
+using EventPtr = Event const*;
 using EventPtrOrError = tl::expected<EventPtr, Error>;
 using ProducerID = uint64_t;
 class Producer;
@@ -32,7 +33,7 @@ class Topic;
 class Notification {
 public:
    NotificationKind kind;
-   std::vector<EventPtr> const &events;
+   keryx_small_vector<EventPtr,1> const events;
    ProducerID producer_id;
    Topic const& topic;
 };

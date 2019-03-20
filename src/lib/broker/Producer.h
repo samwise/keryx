@@ -12,7 +12,7 @@ class Producer {
    ~Producer() ;
    void maybe_add(Consumer &) ;
    void maybe_remove(Consumer &);
-   void publish(EventPtr const &);
+   void publish(EventPtr);
 
  private:
    bool is_match(ProducerFilter const &);
