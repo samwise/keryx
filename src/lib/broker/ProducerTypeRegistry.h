@@ -5,7 +5,7 @@ namespace keryx {
 
 class ProducerTypeRegistry {
  public:
-   virtual ProducerType const &get(ProducerTypeID const &) = 0;
+   virtual ProducerTypeDescriptor const &get(ProducerTypeID const &) = 0;
 };
 
 }

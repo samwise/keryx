@@ -6,17 +6,19 @@ namespace keryx {
 class ProducerTypeRegistry;
 
 class Broker {
- public:
+public:
    Broker(ProducerTypeRegistry &);
    ~Broker();
+   
+   ProducerImpl &make_producer(Topic const &, std::vector<EventPtr> const & initial = {});
+   void publish(ProducerImpl &, EventPtr const &);
+   void destroy_producer(ProducerImpl &);
 
-   Producer &make_producer(Topic const &, std::vector<EventPtr> const & initial = {});
-   void publish(Producer &, EventPtr const &);
-   void destroy_producer(Producer &);
+   ConsumerImpl &make_consumer(ProducerFilter const &, NotificationHandler const &);
+   void destroy_consumer(ConsumerImpl &);
 
-   Consumer &make_consumer(ProducerFilter const &, NotificationHandler const &);
-   void destroy_consumer(Consumer &);
-
+   void do_work();
+   
  private:
    struct PImpl;
    std::unique_ptr<PImpl> me;

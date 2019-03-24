@@ -2,22 +2,19 @@
 #include "broker_common.h"
 
 namespace keryx {
+
+class Broker;
+
 class Producer {
  public:
-   Producer(ProducerType const &,
-            Topic const&,
-            std::vector<EventPtr> const &initial_snapshot,
-            std::vector<std::unique_ptr<Consumer>> const &consumers);
-
-   ~Producer() ;
-   void maybe_add(Consumer &) ;
-   void maybe_remove(Consumer &);
-   void publish(EventPtr);
+   Producer(Broker &, Topic const &,
+            std::vector<EventPtr> const &initial_snapshot = {});
+   ~Producer();
+   void publish(const Event &);
 
  private:
-   bool is_match(ProducerFilter const &);
    struct PImpl;
    std::unique_ptr<PImpl> me;
 };
 
-}
+} // namespace keryx

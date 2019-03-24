@@ -27,7 +27,7 @@ target_link_libraries(libkeryx boost_container)
 target_include_directories(libkeryx PUBLIC ${CMAKE_SOURCE_DIR}/src)
 
 # executable
-file(GLOB EXE_SOURCES "src/*.cpp")
+file(GLOB EXE_SOURCES "src/*.cpp" "src/benchmarks/*.cpp")
 add_executable(keryx ${EXE_SOURCES})
 target_include_directories(keryx PUBLIC ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(keryx libkeryx benchmark boost_container pthread)

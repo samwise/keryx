@@ -7,8 +7,20 @@
 
 {
   "directory": "/home/ppinto/Dropbox/projects/keryx/build/clang_debug",
+  "command": "/usr/lib/ccache/clang++  -Dlibkeryx_EXPORTS -isystem ../../externals/include -I../../src  -g   -Wall   -pedantic   -Wextra   -Werror   --std=c++17   -fdiagnostics-color -fPIC   -o CMakeFiles/libkeryx.dir/src/lib/broker/Consumer.cpp.o -c /home/ppinto/Dropbox/projects/keryx/src/lib/broker/Consumer.cpp",
+  "file": "/home/ppinto/Dropbox/projects/keryx/src/lib/broker/Consumer.cpp"
+},
+
+{
+  "directory": "/home/ppinto/Dropbox/projects/keryx/build/clang_debug",
   "command": "/usr/lib/ccache/clang++  -Dlibkeryx_EXPORTS -isystem ../../externals/include -I../../src  -g   -Wall   -pedantic   -Wextra   -Werror   --std=c++17   -fdiagnostics-color -fPIC   -o CMakeFiles/libkeryx.dir/src/lib/broker/Producer.cpp.o -c /home/ppinto/Dropbox/projects/keryx/src/lib/broker/Producer.cpp",
   "file": "/home/ppinto/Dropbox/projects/keryx/src/lib/broker/Producer.cpp"
+},
+
+{
+  "directory": "/home/ppinto/Dropbox/projects/keryx/build/clang_debug",
+  "command": "/usr/lib/ccache/clang++  -Dlibkeryx_EXPORTS -isystem ../../externals/include -I../../src  -g   -Wall   -pedantic   -Wextra   -Werror   --std=c++17   -fdiagnostics-color -fPIC   -o CMakeFiles/libkeryx.dir/src/lib/broker/ProducerImpl.cpp.o -c /home/ppinto/Dropbox/projects/keryx/src/lib/broker/ProducerImpl.cpp",
+  "file": "/home/ppinto/Dropbox/projects/keryx/src/lib/broker/ProducerImpl.cpp"
 },
 
 {
@@ -27,5 +39,11 @@
   "directory": "/home/ppinto/Dropbox/projects/keryx/build/clang_debug",
   "command": "/usr/lib/ccache/clang++   -isystem ../../externals/include -I../../src  -g   -Wall   -pedantic   -Wextra   -Werror   --std=c++17   -fdiagnostics-color   -o CMakeFiles/keryx.dir/src/main.cpp.o -c /home/ppinto/Dropbox/projects/keryx/src/main.cpp",
   "file": "/home/ppinto/Dropbox/projects/keryx/src/main.cpp"
+},
+
+{
+  "directory": "/home/ppinto/Dropbox/projects/keryx/build/clang_debug",
+  "command": "/usr/lib/ccache/clang++   -isystem ../../externals/include -I../../src  -g   -Wall   -pedantic   -Wextra   -Werror   --std=c++17   -fdiagnostics-color   -o CMakeFiles/keryx.dir/src/benchmarks/alloc_bm.cpp.o -c /home/ppinto/Dropbox/projects/keryx/src/benchmarks/alloc_bm.cpp",
+  "file": "/home/ppinto/Dropbox/projects/keryx/src/benchmarks/alloc_bm.cpp"
 }
 ]
