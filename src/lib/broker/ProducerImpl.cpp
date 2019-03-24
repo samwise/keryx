@@ -19,16 +19,18 @@ struct ProducerImpl::PImpl {
    ProducerTypeDescriptor const &type;
 };
 
-ProducerImpl::ProducerImpl(
+ProducerImpl::ProducerImpl() : me() {}
+
+void ProducerImpl::init(
     ProducerTypeDescriptor const &type, Topic const &topic,
     std::vector<EventPtr> const &initial_snapshot,
-    std::vector<std::unique_ptr<ConsumerImpl>> const &consumers)
-    : me(new PImpl{++current_producer_id,
-                   topic,
-                   make_snapshot_handler(type.snapshot_policy()),
-                   {},
-                   0,
-                   type}) {
+    std::vector<std::unique_ptr<ConsumerImpl>> const &consumers) {
+   me.reset(new PImpl{++current_producer_id,
+                      topic,
+                      make_snapshot_handler(type.snapshot_policy()),
+                      {},
+                      0,
+                      type});
    for (auto ev : initial_snapshot)
       me->snapshot_handler->add_new_event(type.hash_event(*ev), ev);
    for (auto &c : consumers)

@@ -5,9 +5,10 @@ namespace keryx {
 
 class ProducerImpl {
  public:
-   ProducerImpl(ProducerTypeDescriptor const &, Topic const &,
-            std::vector<EventPtr> const &initial_snapshot,
-            std::vector<std::unique_ptr<ConsumerImpl>> const &consumers);
+   ProducerImpl();
+   void init(ProducerTypeDescriptor const &, Topic const &,
+             std::vector<EventPtr> const &initial_snapshot,
+             std::vector<std::unique_ptr<ConsumerImpl>> const &consumers);
 
    ~ProducerImpl();
 

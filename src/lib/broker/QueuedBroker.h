@@ -5,10 +5,10 @@ namespace keryx {
 
 class ProducerTypeRegistry;
 
-class Broker {
+class QueuedBroker {
  public:
-   Broker(ProducerTypeRegistry &);
-   ~Broker();
+   QueuedBroker(ProducerTypeRegistry &);
+   ~QueuedBroker();
 
    ProducerImpl &add_producer(ProducerImpl &, Topic const &,
                               std::vector<EventPtr> const &initial);
@@ -18,7 +18,8 @@ class Broker {
    ConsumerImpl &add_consumer(ConsumerImpl &, ProducerFilter const &,
                               NotificationHandler const &);
    void destroy_consumer(ConsumerImpl &);
-
+   void do_work();
+   
  private:
    struct PImpl;
    std::unique_ptr<PImpl> me;

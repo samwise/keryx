@@ -5,6 +5,9 @@
 #include "lib/broker/broker_common.h"
 #include "lib/broker/Producer.h"
 #include "lib/broker/Consumer.h"
+#include "lib/broker/ProducerImpl.h"
+#include "lib/broker/ConsumerImpl.h"
+#include "lib/broker/QueuedBroker.h"
 
 #include <benchmark/benchmark.h>
 #include <chrono>
@@ -73,9 +76,9 @@ static void queue_std(benchmark::State &state) {
    Topic t{"SimpleProducerType", "test"};
    ProducerFilter f{"SimpleProducerType", [](auto const &) { return true; }};
 
-   auto &p = b.make_producer(t);
-   b.make_consumer(f, [](auto const &) {});
-
+   
+   auto &p = b.add_producer(*new ProducerImpl(), t, {});
+   b.add_consumer(*new ConsumerImpl(), f, [](auto const &) {});
 
    boost::container::pmr::unsynchronized_pool_resource rsrc;
    boost::container::pmr::polymorphic_allocator<SimpleEvent> alloc(&rsrc);
@@ -99,9 +102,8 @@ static void direct(benchmark::State &state) {
    Topic t{"SimpleProducerType", "test"};
    ProducerFilter f{"SimpleProducerType", [](auto const &) { return true; }};
 
-   auto &p = b.make_producer(t);
-   b.make_consumer(f, [](auto const &) {});
-
+   auto &p = b.add_producer(*new ProducerImpl(), t, {});
+   b.add_consumer(*new ConsumerImpl(), f, [](auto const &) {});
 
    boost::container::pmr::unsynchronized_pool_resource rsrc;
    boost::container::pmr::polymorphic_allocator<SimpleEvent> alloc(&rsrc);
@@ -122,9 +124,8 @@ static void queue_boost(benchmark::State &state) {
    Topic t{"SimpleProducerType", "test"};
    ProducerFilter f{"SimpleProducerType", [](auto const &) { return true; }};
 
-   auto &p = b.make_producer(t);
-   b.make_consumer(f, [](auto const &) {});
-
+   auto &p = b.add_producer(*new ProducerImpl(), t, {});
+   b.add_consumer(*new ConsumerImpl(), f, [](auto const &) {});
 
    boost::lockfree::spsc_queue<EventPtr> queue(10);
    boost::container::pmr::unsynchronized_pool_resource rsrc;
@@ -148,8 +149,8 @@ static void queue_ring_buffer(benchmark::State &state) {
    Topic t{"SimpleProducerType", "test"};
    ProducerFilter f{"SimpleProducerType", [](auto const &) { return true; }};
 
-   auto &p = b.make_producer(t);
-   b.make_consumer(f, [](auto const &) {});
+   auto &p = b.add_producer(*new ProducerImpl(), t, {});
+   b.add_consumer(*new ConsumerImpl(), f, [](auto const &) {});
 
    boost::circular_buffer<EventPtr> queue(10);
    boost::container::pmr::unsynchronized_pool_resource rsrc;
@@ -173,8 +174,9 @@ static void baseline(benchmark::State &state) {
    Topic t{"SimpleProducerType", "test"};
    ProducerFilter f{"SimpleProducerType", [](auto const &) { return true; }};
 
-   auto &p = b.make_producer(t);
-   b.make_consumer(f, [](auto const &) {});
+   auto &p = b.add_producer(*new ProducerImpl(), t, {});
+   b.add_consumer(*new ConsumerImpl(), f, [](auto const &) {});
+
 
    SimpleEvent ev;
    for (auto _ : state) {
@@ -189,8 +191,8 @@ static void baseline_hash_loockup(benchmark::State &state) {
    Topic t{"SimpleProducerType", "test"};
    ProducerFilter f{"SimpleProducerType", [](auto const &) { return true; }};
 
-   auto &p = b.make_producer(t);
-   b.make_consumer(f, [](auto const &) {});
+   auto &p = b.add_producer(*new ProducerImpl(), t, {});
+   b.add_consumer(*new ConsumerImpl(), f, [](auto const &) {});
 
    boost::container::flat_map<int,ProducerImpl*> m;
    for (int i = 0; i< 10; i++)
@@ -206,18 +208,24 @@ BENCHMARK(baseline_hash_loockup);
 
 
 static void baseline_api(benchmark::State &state) {
+   boost::container::pmr::unsynchronized_pool_resource rsrc;
+   boost::container::pmr::polymorphic_allocator<SimpleEvent> alloc(&rsrc);
+
    MyRegistry reg;
-   Broker b(reg);
+   QueuedBroker b(reg);
    Topic t{"SimpleProducerType", "test"};
    ProducerFilter f{"SimpleProducerType", [](auto const &) { return true; }};
-
+   SimpleProducerType type_desc;
 
    Consumer c {b,f,[](auto const &) {}};
    Producer p {b,t};
 
    SimpleEvent ev;
    for (auto _ : state) {
+      auto evp = type_desc.clone_event(ev,rsrc);
       p.publish(ev);
+      b.do_work();
+      type_desc.destroy_event(evp,rsrc);
    }
 }
 BENCHMARK(baseline_api);

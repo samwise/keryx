@@ -18,36 +18,42 @@ struct Broker::PImpl {
    ProducerTypeRegistry &producer_type_registry;
 };
 
-Broker::Broker(ProducerTypeRegistry &r) : me(new PImpl{{},{},r}) {}
-   Broker::~Broker() {}
+Broker::Broker(ProducerTypeRegistry &r) : me(new PImpl{{}, {}, r}) {}
+Broker::~Broker() {}
 
-   ProducerImpl &Broker::make_producer(Topic const &topic,
+ProducerImpl &Broker::add_producer(ProducerImpl &producer, Topic const &topic,
                                    std::vector<EventPtr> const &initial) {
-      return *me->producers.emplace_back(
-         new ProducerImpl{me->producer_type_registry.get(topic.producer_type_id()),
-                       topic, initial, me->consumers});
-   }
+   *me->producers.emplace_back(&producer);
+   producer.init(me->producer_type_registry.get(topic.producer_type_id()),
+                 topic, initial, me->consumers);
+   return producer;
+}
 
-   void Broker::publish(ProducerImpl & p, EventPtr const &ev) { p.publish(ev); }
+void Broker::publish(ProducerImpl &p, EventPtr const &ev) { p.publish(ev); }
 
-   void Broker::destroy_producer(ProducerImpl & p) {
-      auto it = std::find_if(me->producers.begin(), me->producers.end(),
-                             [&p](auto const &ptr) { return ptr.get() == &p; });
-      keryx_assert(it != me->producers.end());
-      me->producers.erase(it);
-   }
+void Broker::destroy_producer(ProducerImpl &p) {
+   auto it = std::find_if(me->producers.begin(), me->producers.end(),
+                          [&p](auto const &ptr) { return ptr.get() == &p; });
+   keryx_assert(it != me->producers.end());
+   me->producers.erase(it);
+}
 
-   ConsumerImpl &Broker::make_consumer(ProducerFilter const &filter,
+ConsumerImpl &Broker::add_consumer(ConsumerImpl &consumer,
+                                   ProducerFilter const &filter,
                                    NotificationHandler const &h) {
-      auto &new_consumer = *me->consumers.emplace_back(new ConsumerImpl{filter, h});
-      for (auto &p : me->producers)
-         p->maybe_add(new_consumer);
-      return new_consumer;
-   }
+   *me->consumers.emplace_back(&consumer);
+   consumer = ConsumerImpl{filter, h};
+   for (auto &p : me->producers)
+      p->maybe_add(consumer);
+   return consumer;
+}
 
-   void Broker::destroy_consumer(ConsumerImpl & c) {
-      for (auto &p : me->producers)
-         p->maybe_remove(c);
-   }
+void Broker::destroy_consumer(ConsumerImpl &c) {
+   for (auto &p : me->producers)
+      p->maybe_remove(c);
+   auto it = std::find_if(me->consumers.begin(), me->consumers.end(),
+                          [&c](auto const &tc) { return tc.get() == &c; });
+   me->consumers.erase(it);
+}
 
 } // namespace keryx
