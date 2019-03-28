@@ -18,7 +18,7 @@ class Broker {
    ConsumerImpl &add_consumer(ConsumerImpl &, ProducerFilter const &,
                               NotificationHandler const &);
    void destroy_consumer(ConsumerImpl &);
-
+   void do_work();
  private:
    struct PImpl;
    std::unique_ptr<PImpl> me;

@@ -25,12 +25,6 @@
 
 {
   "directory": "/home/ppinto/Dropbox/projects/keryx/build/clang_debug",
-  "command": "/usr/lib/ccache/clang++  -Dlibkeryx_EXPORTS -isystem ../../externals/include -I../../src  -g   -Wall   -pedantic   -Wextra   -Werror   --std=c++17   -fdiagnostics-color -fPIC   -o CMakeFiles/libkeryx.dir/src/lib/broker/QueuedBroker.cpp.o -c /home/ppinto/Dropbox/projects/keryx/src/lib/broker/QueuedBroker.cpp",
-  "file": "/home/ppinto/Dropbox/projects/keryx/src/lib/broker/QueuedBroker.cpp"
-},
-
-{
-  "directory": "/home/ppinto/Dropbox/projects/keryx/build/clang_debug",
   "command": "/usr/lib/ccache/clang++  -Dlibkeryx_EXPORTS -isystem ../../externals/include -I../../src  -g   -Wall   -pedantic   -Wextra   -Werror   --std=c++17   -fdiagnostics-color -fPIC   -o CMakeFiles/libkeryx.dir/src/lib/broker/SnapshotHandler.cpp.o -c /home/ppinto/Dropbox/projects/keryx/src/lib/broker/SnapshotHandler.cpp",
   "file": "/home/ppinto/Dropbox/projects/keryx/src/lib/broker/SnapshotHandler.cpp"
 },

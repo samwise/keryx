@@ -3,11 +3,11 @@
 
 namespace keryx {
 
-class QueuedBroker;
+class Broker;
 
 class Consumer {
  public:
-   Consumer(QueuedBroker &, ProducerFilter const &, NotificationHandler const &);
+   Consumer(Broker &, ProducerFilter const &, NotificationHandler const &);
    ~Consumer();
 private:
    void on_notification(Notification const&);

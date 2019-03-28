@@ -1,18 +1,18 @@
 #include "Consumer.h"
+#include "Broker.h"
 #include "ConsumerImpl.h"
-#include "QueuedBroker.h"
 
 namespace keryx {
 
 struct Consumer::PImpl {
    NotificationHandler on_notify;
-   QueuedBroker *broker;
+   Broker *broker;
    ConsumerImpl *consumer;
 };
 
-Consumer::Consumer(QueuedBroker &b, ProducerFilter const &f,
+Consumer::Consumer(Broker &b, ProducerFilter const &f,
                    NotificationHandler const &h)
-   : me(new PImpl{}) {
+    : me(new PImpl{}) {
 
    me->on_notify = [this](auto const &n) { me->on_notify(n); };
    me->broker = &b;

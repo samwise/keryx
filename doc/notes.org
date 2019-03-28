@@ -75,10 +75,23 @@ NotiticationParser instances
   
 
 ** TopicFinder
-* Quick TODOS
-** TODO Update notes from noteboo
 * Log
-<2019-02-24 Sun>
+** <2019-03-24 Sun>
+*** DONE
+- Have reentrancy proof API on
+*** Mop up 
+- Need to push allocator in, at least for events
+  - This will cause some issues with who knows about the type registry
+- Should collapse queued broker into broker, use inlining, maybe data
+  layout to speed things a bit, try to see if dropping the snapshot
+  thing helps 
+- Clean up code
+*** NEXT
+**** Inter broker
+- Introduce inter broker to broker
+- Create a channel abstraction
+- Implement channel abstraction over shared memory
+** <2019-02-24 Sun>
 - Reviewed notes
 - Clarified goals
 - Cleaned up code

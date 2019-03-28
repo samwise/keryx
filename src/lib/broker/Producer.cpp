@@ -1,20 +1,20 @@
 #include "Producer.h"
-#include "QueuedBroker.h"
+#include "Broker.h"
 #include "ProducerImpl.h"
 
 namespace keryx {
 
 struct Producer::PImpl {
-   QueuedBroker *broker;
+   Broker *broker;
    ProducerImpl *producer;
 };
 
-Producer::Producer(QueuedBroker &b, Topic const &topic,
+Producer::Producer(Broker &b, Topic const &topic,
                    std::vector<EventPtr> const &initial_snapshot)
-   : me(new PImpl{}) {
+    : me(new PImpl{}) {
    me->broker = &b;
-   me->producer =
-      &(me->broker->add_producer(*new ProducerImpl(), topic, initial_snapshot));
+   me->producer = &(
+       me->broker->add_producer(*new ProducerImpl(), topic, initial_snapshot));
 }
 
 Producer::~Producer() { me->broker->destroy_producer(*me->producer); }
