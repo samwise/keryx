@@ -14,7 +14,7 @@ Producer::Producer(Broker &b, Topic const &topic,
     : me(new PImpl{}) {
    me->broker = &b;
    me->producer = &(
-       me->broker->add_producer(*new ProducerImpl(), topic, initial_snapshot));
+       me->broker->make_producer(topic, initial_snapshot));
 }
 
 Producer::~Producer() { me->broker->destroy_producer(*me->producer); }

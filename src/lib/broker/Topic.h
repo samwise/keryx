@@ -5,14 +5,14 @@
 namespace keryx {
 class Topic {
  public:
-   Topic(ProducerTypeID const &type_id, ProducerName const &name)
-       : _producer_type_id(type_id), _producer_name(name) {}
+   Topic(StreamTypeID const &type_id, StreamName const &name)
+       : _stream_type_id(type_id), _stream_name(name) {}
 
-   ProducerTypeID const &producer_type_id() const { return _producer_type_id; }
-   ProducerName const &producer_name() { return _producer_name; }
+   StreamTypeID const &stream_type_id() const { return _stream_type_id; }
+   StreamName const &producer_name() { return _stream_name; }
    ~Topic() {} // necessary because of clang bug
  private:
-   ProducerTypeID _producer_type_id;
-   ProducerName _producer_name;
+   StreamTypeID _stream_type_id;
+   StreamName _stream_name;
 };
 } // namespace keryx

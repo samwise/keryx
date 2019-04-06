@@ -3,25 +3,29 @@
 
 namespace keryx {
 
-class ProducerTypeRegistry;
+class StreamDescriptorRegistry;
 
 class Broker {
  public:
-   Broker(ProducerTypeRegistry &);
+   Broker(StreamDescriptorRegistry &, keryx_memory_resource &alloc);
    ~Broker();
 
-   ProducerImpl &add_producer(ProducerImpl &, Topic const &,
-                              std::vector<EventPtr> const &initial);
+   ProducerImpl &make_producer(Topic const &,
+                               std::vector<EventPtr> const &initial);
    void publish(ProducerImpl &, EventPtr const &);
    void destroy_producer(ProducerImpl &);
 
-   ConsumerImpl &add_consumer(ConsumerImpl &, ProducerFilter const &,
-                              NotificationHandler const &);
+   ConsumerImpl &make_consumer(StreamFilter const &,
+                               NotificationHandler const &);
    void destroy_consumer(ConsumerImpl &);
    void do_work();
+
  private:
+   keryx_memory_resource &my_alloc;
    struct PImpl;
-   std::unique_ptr<PImpl> me;
+   // shared ptr because at this time there is no std implementation
+   // of alloc_unique
+   std::shared_ptr<PImpl> me;
 };
 
 } // namespace keryx

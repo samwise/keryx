@@ -7,7 +7,7 @@ class Broker;
 
 class Consumer {
  public:
-   Consumer(Broker &, ProducerFilter const &, NotificationHandler const &);
+   Consumer(Broker &, StreamFilter const &, NotificationHandler const &);
    ~Consumer();
 private:
    void on_notification(Notification const&);

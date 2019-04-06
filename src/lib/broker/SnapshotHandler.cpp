@@ -56,7 +56,7 @@ class CacheHash : public SnapshotHandler {
    std::unordered_map<uint64_t, EventPtr> _hash;
 };
 
-std::unique_ptr<SnapshotHandler> make_snapshot_handler(SnapshotPolicy policy) {
+std::shared_ptr<SnapshotHandler> make_snapshot_handler(SnapshotPolicy policy) {
    switch (policy) {
    case SnapshotPolicy::NO_SNAPSHOT:
       return std::make_unique<NoSnapshot>();

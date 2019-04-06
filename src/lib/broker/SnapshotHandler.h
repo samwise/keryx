@@ -10,6 +10,6 @@ class SnapshotHandler {
    virtual std::vector<EventPtr> const &get_snapshot() = 0;
 };
 
-std::unique_ptr<SnapshotHandler> make_snapshot_handler(SnapshotPolicy policy) ;
+std::shared_ptr<SnapshotHandler> make_snapshot_handler(SnapshotPolicy policy) ;
 
 }

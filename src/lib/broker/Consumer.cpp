@@ -10,13 +10,13 @@ struct Consumer::PImpl {
    ConsumerImpl *consumer;
 };
 
-Consumer::Consumer(Broker &b, ProducerFilter const &f,
+Consumer::Consumer(Broker &b, StreamFilter const &f,
                    NotificationHandler const &h)
     : me(new PImpl{}) {
 
    me->on_notify = [this](auto const &n) { me->on_notify(n); };
    me->broker = &b;
-   me->consumer = &(me->broker->add_consumer(*new ConsumerImpl(), f, h));
+   me->consumer = &(me->broker->make_consumer(f, h));
 }
 
 Consumer::~Consumer() {

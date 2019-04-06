@@ -5,10 +5,11 @@ namespace keryx {
 
 class ProducerImpl {
  public:
-   ProducerImpl();
-   void init(ProducerTypeDescriptor const &, Topic const &,
-             std::vector<EventPtr> const &initial_snapshot,
-             std::vector<std::unique_ptr<ConsumerImpl>> const &consumers);
+   ProducerImpl(keryx_memory_resource &alloc,
+                StreamDescriptor const &, Topic const &,
+                std::vector<EventPtr> const &initial_snapshot);
+
+   void init(keryx_vec<ConsumerImplPtr> const &consumers);
 
    ~ProducerImpl();
 
@@ -17,9 +18,9 @@ class ProducerImpl {
    void publish(EventPtr);
 
  private:
-   bool is_match(ProducerFilter const &);
+   bool is_match(StreamFilter const &);
    struct PImpl;
-   std::unique_ptr<PImpl> me;
+   std::shared_ptr<PImpl> me;
 };
 
 } // namespace keryx

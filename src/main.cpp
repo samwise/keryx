@@ -1,6 +1,6 @@
 #include "lib/broker/Broker.h"
-#include "lib/broker/ProducerType.h"
-#include "lib/broker/ProducerTypeRegistry.h"
+#include "lib/broker/StreamDescriptor.h"
+#include "lib/broker/StreamDescriptorRegistry.h"
 #include "lib/broker/Topic.h"
 #include "lib/broker/broker_common.h"
 #include "lib/broker/Producer.h"
@@ -32,9 +32,9 @@ struct SimpleEvent : public Event {
    TimeStamp ts;
 };
 
-class SimpleProducerType : public ProducerTypeDescriptor {
+class SimpleDescriptor : public StreamDescriptor {
  public:
-   ProducerTypeID id() const override { return "SimpleProducerType"; }
+   StreamTypeID id() const override { return "SimpleProducerType"; }
    SnapshotPolicy snapshot_policy() const override {
       return SnapshotPolicy::NO_SNAPSHOT;
    }
@@ -63,26 +63,26 @@ class SimpleProducerType : public ProducerTypeDescriptor {
    uint64_t hash_event(Event const &) const override { return 0; }
 };
 
-class MyRegistry : public ProducerTypeRegistry {
+class MyRegistry : public StreamDescriptorRegistry {
  public:
-   ProducerTypeDescriptor const &get(ProducerTypeID const &) override { return simple; }
-   SimpleProducerType simple;
+   StreamDescriptor const &get(StreamTypeID const &) override { return simple; }
+   SimpleDescriptor simple;
 };
 
 static void publish(benchmark::State &state) {
-   MyRegistry reg;
-   Broker b(reg);
-   Topic t{"SimpleProducerType", "test"};
-   ProducerFilter f{"SimpleProducerType", [](auto const &) { return true; }};
-
-   auto &p = b.add_producer(*new ProducerImpl(), t, {});
-   b.add_consumer(*new ConsumerImpl(), f, [](auto const &) {});
-
    boost::container::pmr::unsynchronized_pool_resource rsrc;
+   MyRegistry reg;
+   Broker b(reg,rsrc);
+   Topic t{"SimpleProducerType", "test"};
+   StreamFilter f{"SimpleProducerType", [](auto const &) { return true; }};
+
+   auto &p = b.make_producer(t, {});
+   b.make_consumer(f, [](auto const &) {});
+
    boost::container::pmr::polymorphic_allocator<SimpleEvent> alloc(&rsrc);
    
    SimpleEvent ev;
-   SimpleProducerType type_desc;
+   SimpleDescriptor type_desc;
    for (auto _ : state) {
       auto evp = type_desc.clone_event(ev,rsrc);
       b.publish(p, evp);

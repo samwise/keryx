@@ -4,7 +4,7 @@
 namespace keryx {
 class ConsumerImpl {
  public:
-   ProducerFilter filter;
+   StreamFilter filter;
    NotificationHandler notify;
 };
 

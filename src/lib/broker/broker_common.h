@@ -4,8 +4,11 @@
 #include <memory>
 #include <string>
 #include <functional>
-#include "../utils/allocators.h"
+#include <queue>
+#include <deque>
+#include <boost/container/pmr/small_vector.hpp>
 
+#include "../utils/allocators.h"
 namespace keryx {
 
 class Event {};
@@ -21,30 +24,36 @@ enum class NotificationKind { START_PRODUCER,EVENT,STOP_PRODUCER };
 
 using EventPtr = Event const*;
 using EventPtrOrError = tl::expected<EventPtr, Error>;
-using ProducerID = uint64_t;
+using StreamID = uint64_t;
 class ProducerImpl;
 class ConsumerImpl;
-class ProducerTypeDescriptor;
-using ProducerTypeID = std::string;
+class StreamDescriptor;
+using StreamTypeID = std::string;
 using NotificationID = uint64_t;
-using ProducerName = std::string;
+using StreamName = std::string;
 class Topic;
+
+using ProducerImplPtr = std::shared_ptr<ProducerImpl>;
+using ConsumerImplPtr = std::shared_ptr<ConsumerImpl>;
+template <class T> using keryx_vec = std::vector<T, keryx_pmr<T>>;
+template <class T> using keryx_queue = std::queue<T, std::deque<T,keryx_pmr<T>>>;
 
 class Notification {
 public:
    NotificationKind kind;
-   keryx_small_vector<EventPtr,1> const events;
-   ProducerID producer_id;
+   keryx_vec<EventPtr> const events;
+   StreamID stream_id;
    Topic const& topic;
 };
 
 using NotificationHandler = std::function<void(Notification const &)>;
 
-class ProducerFilter {
+class StreamFilter {
 public:
-   ProducerTypeID producer_type_id;
-   std::function<bool(ProducerName const&)> is_match;
-   ~ProducerFilter() {} // necessary because of clang bug
+   StreamTypeID stream_type_id;
+   std::function<bool(StreamName const&)> is_match;
+   ~StreamFilter() {} // necessary because of clang bug
 };
+
 
 } // namespace keryx

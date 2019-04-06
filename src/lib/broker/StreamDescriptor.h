@@ -6,9 +6,9 @@
 
 namespace keryx {
 
-class ProducerTypeDescriptor {
+class StreamDescriptor {
  public:
-   virtual ProducerTypeID id() const = 0;
+   virtual StreamTypeID id() const = 0;
    virtual SnapshotPolicy snapshot_policy() const = 0;
    virtual uint64_t serialized_event_size(Event const &) const = 0;
    virtual void serialize_event(Event const &, std::string_view *out) const = 0;
