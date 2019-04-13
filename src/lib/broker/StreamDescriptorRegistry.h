@@ -5,7 +5,7 @@ namespace keryx {
 
 class StreamDescriptorRegistry {
  public:
-   virtual StreamDescriptor const &get(StreamTypeID const &) = 0;
+   virtual StreamDescriptor const &get(StreamType const &) = 0;
 };
 
 }

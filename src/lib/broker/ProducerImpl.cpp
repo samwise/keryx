@@ -1,7 +1,7 @@
 #include "ProducerImpl.h"
 #include "ConsumerImpl.h"
-#include "StreamDescriptor.h"
 #include "SnapshotHandler.h"
+#include "StreamDescriptor.h"
 #include "Topic.h"
 
 #include <atomic>
@@ -12,29 +12,36 @@ std::atomic<uint64_t> current_producer_id;
 
 struct ProducerImpl::PImpl {
    PImpl(keryx_memory_resource &alloc, Topic const &topic,
-         std::shared_ptr<SnapshotHandler> const &handler,
-         StreamDescriptor const &type)
-       : id(++current_producer_id), topic(topic), snapshot_handler(handler),
-         consumers(keryx_pmr<ConsumerImpl *>{&alloc}), type(type) {}
+         SnapshotHandlerPtr &&handler, StreamDescriptor const &desc)
+       : id(++current_producer_id), topic(topic),
+         snapshot_handler(std::move(handler)),
+         consumers(keryx_pmr<ConsumerImpl *>{&alloc}), descriptor(desc),
+         alloc(alloc)
+   {}
 
    StreamID id;
    Topic topic;
-   std::shared_ptr<SnapshotHandler> snapshot_handler;
+   SnapshotHandlerPtr snapshot_handler;
    keryx_vec<ConsumerImpl *> consumers;
    NotificationID last_msg_id;
-   StreamDescriptor const &type;
+   StreamDescriptor const &descriptor;
+   keryx_memory_resource &alloc;
 };
 
 ProducerImpl::ProducerImpl(keryx_memory_resource &alloc,
-                           StreamDescriptor const &desc,
-                           Topic const &topic,
-                           std::vector<EventPtr> const &initial_snapshot)
-    : me(std::allocate_shared<PImpl>(
-            keryx_pmr<PImpl>{&alloc}, alloc,topic,
-          make_snapshot_handler(desc.snapshot_policy()), desc)) {
+                           StreamDescriptor const &desc, Topic const &topic,
+                           std::vector<Event const *> const &initial_snapshot)
+    : me(std::allocate_shared<PImpl>(keryx_pmr<PImpl>{&alloc}, alloc, topic,
+                                     desc.make_snapshot_handler(alloc), desc)) {
 
-   for (auto ev : initial_snapshot)
-      me->snapshot_handler->add_new_event(desc.hash_event(*ev), ev);
+   for (auto ev : initial_snapshot) {
+      auto ev_clone = desc.clone_event(*ev,alloc);
+      me->snapshot_handler->add_new_event(std::move(ev_clone));
+   }
+}
+
+EventPtr ProducerImpl::clone_event(Event const &ev){
+   return me->descriptor.clone_event(ev,me->alloc);
 }
 
 void ProducerImpl::init(keryx_vec<ConsumerImplPtr> const &consumers) {
@@ -51,7 +58,6 @@ ProducerImpl::~ProducerImpl() {
 void ProducerImpl::maybe_add(ConsumerImpl &c) {
    if (is_match(c.filter)) {
       me->consumers.push_back(&c);
-
       Notification m = {
           NotificationKind::START_PRODUCER, {}, me->id, me->topic};
       c.notify(m);
@@ -65,15 +71,15 @@ void ProducerImpl::maybe_remove(ConsumerImpl &c) {
       me->consumers.erase(it);
 }
 
-void ProducerImpl::publish(EventPtr ev) {
-   auto m = Notification{NotificationKind::EVENT, {ev}, me->id, me->topic};
-   me->snapshot_handler->add_new_event(me->type.hash_event(*ev), ev);
+void ProducerImpl::publish(EventPtr &&ev) {
+   auto m = Notification{NotificationKind::EVENT, {ev.get()}, me->id, me->topic};
    for (auto &c : me->consumers)
       c->notify(m);
+   me->snapshot_handler->add_new_event(std::move(ev));
 }
 
 bool ProducerImpl::is_match(StreamFilter const &f) {
-   return f.stream_type_id == me->type.id() &&
+   return f.stream_type == me->descriptor.stream_type() &&
           f.is_match(me->topic.producer_name());
 }
 

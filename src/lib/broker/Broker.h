@@ -11,8 +11,8 @@ class Broker {
    ~Broker();
 
    ProducerImpl &make_producer(Topic const &,
-                               std::vector<EventPtr> const &initial);
-   void publish(ProducerImpl &, EventPtr const &);
+                               std::vector<Event const *> const &initial);
+   void publish(ProducerImpl &, Event const &);
    void destroy_producer(ProducerImpl &);
 
    ConsumerImpl &make_consumer(StreamFilter const &,
@@ -23,9 +23,7 @@ class Broker {
  private:
    keryx_memory_resource &my_alloc;
    struct PImpl;
-   // shared ptr because at this time there is no std implementation
-   // of alloc_unique
-   std::shared_ptr<PImpl> me;
+   keryx_unique_ptr<PImpl> me;
 };
 
 } // namespace keryx

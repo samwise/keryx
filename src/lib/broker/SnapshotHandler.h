@@ -1,4 +1,6 @@
 #pragma once
+
+#include "../utils/allocators.h"
 #include "broker_common.h"
 
 namespace keryx {
@@ -6,10 +8,19 @@ namespace keryx {
 class SnapshotHandler {
  public:
    virtual ~SnapshotHandler() {}
-   virtual void add_new_event(uint64_t event_hash, EventPtr const &ev) = 0;
-   virtual std::vector<EventPtr> const &get_snapshot() = 0;
+   virtual void add_new_event(EventPtr &&) = 0;
+   virtual std::vector<Event const *> const &get_snapshot() = 0;
 };
 
-std::shared_ptr<SnapshotHandler> make_snapshot_handler(SnapshotPolicy policy) ;
+class NullSnapshotHandler : public SnapshotHandler {
+ public:
+   ~NullSnapshotHandler() {}
+   void add_new_event(EventPtr &&ev) override { ev.reset(); }
+   std::vector<Event const *> const &get_snapshot() override { return _; }
+private:
+   std::vector<Event const*> _;
+};
 
-}
+using SnapshotHandlerPtr = std::unique_ptr<SnapshotHandler,std::function<void(SnapshotHandler*)>>;
+
+} // namespace keryx

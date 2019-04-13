@@ -8,7 +8,7 @@ class Broker;
 class Producer {
  public:
    Producer(Broker &, Topic const &,
-            std::vector<EventPtr> const &initial_snapshot = {});
+            std::vector<Event const*> const &initial_snapshot = {});
    ~Producer();
    void publish(const Event &);
 
