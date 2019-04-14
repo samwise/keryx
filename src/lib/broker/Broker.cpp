@@ -2,18 +2,10 @@
 #include "../utils/keryx_assert.h"
 #include "ConsumerImpl.h"
 #include "ProducerImpl.h"
-#include "Topic.h"
-#include <atomic>
-#include <inplace_function.h>
+#include "TopicImpl.h"
 #include <variant>
-#include <boost/circular_buffer.hpp>
 
 namespace keryx {
-
-class StreamDescriptorRegistry {
- public:
-   virtual StreamDescriptor const &get(StreamType const &) = 0;
-};
 
 struct InitProducer {
    ProducerImplPtr producer;
@@ -39,22 +31,19 @@ struct DestroyConsumer {
 using Action = std::variant<InitProducer, DestroyProducer, Publish,
                             InitConsumer, DestroyConsumer>;
 
-// using keryx_action_queue = boost::circular_buffer<Action,keryx_pmr<Action>> ;
-using keryx_action_queue = std::queue<Action,std::deque<Action,keryx_pmr<Action>>> ;
+using keryx_action_queue =
+    std::queue<Action, std::deque<Action, keryx_pmr<Action>>>;
 
-void enqueue(keryx_action_queue &q,Action &&a);
-std::pair<bool,Action> dequeue(keryx_action_queue &q);
+void enqueue(keryx_action_queue &q, Action &&a);
 
 struct Broker::PImpl {
-   PImpl(keryx_memory_resource &alloc,StreamDescriptorRegistry &reg)
+   PImpl(keryx_memory_resource &alloc)
        : producers(keryx_pmr<ProducerImplPtr>(&alloc)),
          consumers(keryx_pmr<ConsumerImplPtr>(&alloc)),
-         stream_descriptor_registry(reg),
-         pending_actions(keryx_pmr<Action> {&alloc}) {}
+         pending_actions(keryx_pmr<Action>{&alloc}) {}
 
    keryx_vec<ProducerImplPtr> producers;
    keryx_vec<ConsumerImplPtr> consumers;
-   StreamDescriptorRegistry &stream_descriptor_registry;
    keryx_action_queue pending_actions;
 
    void operator()(InitProducer &ip) {
@@ -90,61 +79,56 @@ struct Broker::PImpl {
    }
 };
 
-Broker::Broker(StreamDescriptorRegistry &r, keryx_memory_resource &alloc)
+Broker::Broker(keryx_memory_resource &alloc)
     : my_alloc(alloc),
-      me(keryx_allocate_unique<PImpl>(keryx_pmr<PImpl>{&alloc},alloc, r)) {}
+      me(keryx_allocate_unique<PImpl>(keryx_pmr<PImpl>{&alloc}, alloc)) {}
 
 Broker::~Broker() {}
 
 ProducerImpl &
-Broker::make_producer(Topic const &topic,
-                      std::vector<Event const *> const &snapshot) {
+Broker::make_producer(SnapshotHandlerPtr &&snapshot_handler,
+                      TopicImpl const &topic,
+                      keryx_vec<EventPtr> const &initial_snapshot) {
    auto p = keryx_allocate_unique<ProducerImpl>(
        keryx_pmr<ProducerImpl>{&my_alloc}, my_alloc,
-       me->stream_descriptor_registry.get(topic.stream_type_id()), topic,
-       snapshot);
+       std::move(snapshot_handler), topic, initial_snapshot);
    auto p_ptr = p.get();
-   enqueue(me->pending_actions,InitProducer{std::move(p)});
+   enqueue(me->pending_actions, InitProducer{std::move(p)});
    return *p_ptr;
 }
 
-
-void Broker::publish(ProducerImpl &p, Event const &ev) {
-   enqueue(me->pending_actions,Publish{&p, p.clone_event(ev)});
+void Broker::publish(ProducerImpl &p, EventPtr &&ev) {
+   enqueue(me->pending_actions, Publish{&p,std::move(ev)});
 }
 
 void Broker::destroy_producer(ProducerImpl &p) {
-   enqueue(me->pending_actions,DestroyProducer{&p});
+   enqueue(me->pending_actions, DestroyProducer{&p});
 }
 
-ConsumerImpl &Broker::make_consumer(StreamFilter const &f,
-                                    NotificationHandler const &h) {
+ConsumerImpl &Broker::make_consumer(StreamFilterImpl const &f,
+                                    NotificationHandlerImpl const &h) {
    auto c = keryx_allocate_unique<ConsumerImpl>(
        keryx_pmr<ConsumerImpl>{&my_alloc}, f, h);
    auto c_ptr = c.get();
-   enqueue(me->pending_actions,InitConsumer{std::move(c)});
+   enqueue(me->pending_actions, InitConsumer{std::move(c)});
    return *c_ptr;
 }
 
 void Broker::destroy_consumer(ConsumerImpl &c) {
-   enqueue(me->pending_actions,DestroyConsumer{&c});
+   c.notify = [] (auto const&) {};
+   enqueue(me->pending_actions, DestroyConsumer{&c});
 }
 
 void Broker::do_work() {
-   while (me->pending_actions.size())  {
+   while (me->pending_actions.size()) {
       Action a = std::move(me->pending_actions.front());
       me->pending_actions.pop();
-      std::visit(*me,a);
+      std::visit(*me, a);
    }
 }
 
-void enqueue(keryx_action_queue &q,Action &&a)
-{
+void enqueue(keryx_action_queue &q, Action &&a) {
    q.push(std::move(a));
-   
-   // if (q.full()) 
-   //    q.set_capacity(q.capacity()*2);
-   // q.push_back(std::move(a));
 }
 
 } // namespace keryx

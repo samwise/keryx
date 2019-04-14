@@ -4,10 +4,10 @@
 namespace keryx {
 class ConsumerImpl {
  public:
-   ConsumerImpl(StreamFilter const &f, NotificationHandler const &n)
+   ConsumerImpl(StreamFilterImpl const &f, NotificationHandlerImpl const &n)
        : filter(f), notify(n) {}
-   StreamFilter filter;
-   NotificationHandler notify;
+   StreamFilterImpl filter;
+   NotificationHandlerImpl notify;
 };
 
 } // namespace keryx

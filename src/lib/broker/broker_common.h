@@ -13,6 +13,7 @@ namespace keryx {
 
 class Event {
 public:
+   virtual ~Event(){};
 };
 
 struct Error {
@@ -29,31 +30,32 @@ using StreamID = uint64_t;
 class ProducerImpl;
 class ConsumerImpl;
 class StreamDescriptor;
-using StreamType = std::string;
+using StreamTypeID = std::type_info;
 using NotificationID = uint64_t;
 using StreamName = std::string;
-class Topic;
+class TopicImpl;
 
 using ProducerImplPtr = keryx_unique_ptr<ProducerImpl>;
 using ConsumerImplPtr = keryx_unique_ptr<ConsumerImpl>;
 template <class T> using keryx_vec = std::vector<T, keryx_pmr<T>>;
 template <class T,size_t N> using keryx_small_vec = boost::container::small_vector<T,N>;
-class Notification {
+class NotificationImpl {
 public:
    NotificationKind kind;
    keryx_small_vec<Event const*,1> const events;
    StreamID stream_id;
-   Topic const& topic;
+   TopicImpl const& topic;
 };
 
-using NotificationHandler = std::function<void(Notification const &)>;
+using NotificationHandlerImpl = std::function<void(NotificationImpl const &)>;
 
-class StreamFilter {
+class StreamFilterImpl {
 public:
-   StreamType stream_type;
+   StreamTypeID const &stream_type_id;
    std::function<bool(StreamName const&)> is_match;
-   ~StreamFilter() {} // necessary because of clang bug
+   ~StreamFilterImpl() {} // necessary because of clang bug
 };
+
 
 
 } // namespace keryx

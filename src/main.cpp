@@ -1,11 +1,6 @@
 #include "lib/broker/Broker.h"
 #include "lib/broker/Consumer.h"
-#include "lib/broker/ConsumerImpl.h"
 #include "lib/broker/Producer.h"
-#include "lib/broker/ProducerImpl.h"
-#include "lib/broker/StreamDescriptor.h"
-#include "lib/broker/StreamDescriptorRegistry.h"
-#include "lib/broker/Topic.h"
 #include "lib/broker/broker_common.h"
 
 #include <benchmark/benchmark.h>
@@ -30,23 +25,23 @@ struct SimpleEvent : public Event {
    TimeStamp ts;
 };
 
-class SimpleDescriptor : public StreamDescriptor {
+template <class ET>
+class SimpleStream {
  public:
-   StreamType stream_type() const override { return "Simple"; }
-
-   EventPtr clone_event(Event const &ev,
-                        keryx_memory_resource &mem) const override {
-      auto &sev = (SimpleEvent &)ev;
-      auto buffer = mem.allocate(sizeof(SimpleEvent));
-      return {new (buffer) SimpleEvent(sev), [&mem](Event *ev) {
-                 auto sev = (SimpleEvent *)ev;
-                 sev->~SimpleEvent();
-                 mem.deallocate(sev, sizeof(SimpleEvent));
+   using EventType = ET;
+   
+   static EventPtr clone_event(ET const &sev,
+                        keryx_memory_resource &mem)  {
+      auto buffer = mem.allocate(sizeof(ET));
+      return {new (buffer) ET(sev), [&mem](Event *ev) {
+                 auto sev = (ET *)ev;
+                 sev->~ET();
+                 mem.deallocate(sev, sizeof(ET));
               }};
    }
 
-   SnapshotHandlerPtr
-   make_snapshot_handler(keryx_memory_resource &mem) const override {
+   static SnapshotHandlerPtr
+   make_snapshot_handler(keryx_memory_resource &mem) {
       auto buffer = mem.allocate(sizeof(NullSnapshotHandler));
       return {new (buffer) NullSnapshotHandler(), [&mem](SnapshotHandler *h) {
                  h->~SnapshotHandler();
@@ -55,19 +50,12 @@ class SimpleDescriptor : public StreamDescriptor {
    }
 };
 
-class MyRegistry : public StreamDescriptorRegistry {
- public:
-   StreamDescriptor const &get(StreamType const &) override { return simple; }
-   SimpleDescriptor simple;
-};
-
 static void alloc(benchmark::State &state) {
    boost::container::pmr::unsynchronized_pool_resource rsrc;
 
-   SimpleDescriptor desc;
    SimpleEvent ev;
    for (auto _ : state) {
-      auto p = desc.clone_event(ev, rsrc);
+      auto p = SimpleStream<SimpleEvent>::clone_event(ev, rsrc);
       p.reset();
    }
 }
@@ -75,14 +63,13 @@ BENCHMARK(alloc);
 
 static void publish(benchmark::State &state) {
    boost::container::pmr::unsynchronized_pool_resource rsrc;
+   Broker b(rsrc);
 
-   MyRegistry reg;
-   Broker b(reg, rsrc);
-   Topic t{"Simple", "test"};
-   StreamFilter f{"SimpleProducerType", [](auto const &) { return true; }};
-
-   Producer p{b, t};
-   Consumer c{b, f, [](auto const &) {}};
+   using Stream = SimpleStream<SimpleEvent>;
+   Producer<Stream> p{b, StreamName {}};
+   Consumer<Stream> c{b,
+                      [](auto const &) {return true;},
+                      [](auto const &) {}};
 
    SimpleEvent ev;
    for (auto _ : state) {
@@ -94,14 +81,13 @@ BENCHMARK(publish);
 
 void vg_workout() {
    boost::container::pmr::unsynchronized_pool_resource rsrc;
+   Broker b(rsrc);
 
-   MyRegistry reg;
-   Broker b(reg, rsrc);
-   Topic t{"Simple", "test"};
-   StreamFilter f{"SimpleProducerType", [](auto const &) { return true; }};
-
-   Producer p{b, t};
-   Consumer c{b, f, [](auto const &) {}};
+   using Stream = SimpleStream<SimpleEvent>;
+   Producer<Stream> p{b, StreamName {}};
+   Consumer<Stream> c{b,
+                      [](auto const &) {return true;},
+                      [](auto const &) {}};
 
    SimpleEvent ev;
    for (;;) {
