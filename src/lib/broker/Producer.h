@@ -11,7 +11,7 @@ class Producer {
    using EventType = typename Stream::EventType;
 
    Producer(Broker &b,
-            StreamName const&name,
+            StreamName const&name = {},
             std::vector<EventType const*> const &initial_snapshot = {}) :
       broker(b),
       producer(broker.make_producer(Stream::make_snapshot_handler(b.alloc()),

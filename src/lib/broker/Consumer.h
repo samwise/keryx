@@ -10,7 +10,7 @@ template <class Stream> class Notification {
  public:
    using EventType = typename Stream::EventType;
    NotificationKind kind;
-   keryx_small_vec<EventType const*, 1> events;
+   keryx_small_vec<EventType const *, 1> events;
    StreamID stream_id;
    StreamName const &name;
 };
@@ -21,23 +21,39 @@ template <class Stream> class Consumer {
 
    template <class Filter, class Handler>
    Consumer(Broker &b, Filter const &f, Handler const &h)
+       : broker(b), consumer(broker.make_consumer({typeid(Stream), f},
+                                                  make_untyped_handler(h))) {}
+
+   template <class Handler>
+   Consumer(Broker &b, StreamName const &name, Handler const &h)
        : broker(b),
          consumer(broker.make_consumer(
-             {typeid(Stream), f}, [h](auto const &untyped_notification) {
-                Notification<Stream> typed_notification{
-                    untyped_notification.kind,
-                    {},
-                    untyped_notification.stream_id,
-                    untyped_notification.topic.stream_name()};
-                for (auto ev : untyped_notification.events)
-                   typed_notification.events.push_back(
-                       dynamic_cast<EventType const*>(ev));
-                h(typed_notification);
-             })) {}
+             {typeid(Stream), [name](auto const &n) { return name == n; }},
+             make_untyped_handler(h))) {}
+
+   template <class Handler>
+   Consumer(Broker &b, Handler const &h)
+       : broker(b), consumer(broker.make_consumer(
+                        {typeid(Stream), [](auto const &) { return true; }},
+                        make_untyped_handler(h))) {}
 
    ~Consumer() { broker.destroy_consumer(consumer); }
 
  private:
+   template <class H> NotificationHandlerImpl make_untyped_handler(H const &h) {
+      return [h](auto const &untyped_notification) {
+         Notification<Stream> typed_notification{
+             untyped_notification.kind,
+             {},
+             untyped_notification.stream_id,
+             untyped_notification.topic.stream_name()};
+         for (auto ev : untyped_notification.events)
+            typed_notification.events.push_back(
+                dynamic_cast<EventType const *>(ev));
+         h(typed_notification);
+      };
+   }
+
    Broker &broker;
    ConsumerImpl &consumer;
 }; // namespace keryx

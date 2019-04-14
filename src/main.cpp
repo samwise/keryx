@@ -66,10 +66,8 @@ static void publish(benchmark::State &state) {
    Broker b(rsrc);
 
    using Stream = SimpleStream<SimpleEvent>;
-   Producer<Stream> p{b, StreamName {}};
-   Consumer<Stream> c{b,
-                      [](auto const &) {return true;},
-                      [](auto const &) {}};
+   Producer<Stream> p{b};
+   Consumer<Stream> c{b, [](auto const &) {}};
 
    SimpleEvent ev;
    for (auto _ : state) {
@@ -84,10 +82,8 @@ void vg_workout() {
    Broker b(rsrc);
 
    using Stream = SimpleStream<SimpleEvent>;
-   Producer<Stream> p{b, StreamName {}};
-   Consumer<Stream> c{b,
-                      [](auto const &) {return true;},
-                      [](auto const &) {}};
+   Producer<Stream> p{b};
+   Consumer<Stream> c{b, [](auto const &) {}};
 
    SimpleEvent ev;
    for (;;) {
