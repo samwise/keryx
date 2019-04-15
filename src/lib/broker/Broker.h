@@ -9,6 +9,7 @@ class StreamDescriptorRegistry;
 
 class Broker {
  public:
+   Broker();
    Broker(keryx_memory_resource &alloc);
    ~Broker();
 
@@ -24,6 +25,7 @@ class Broker {
    keryx_memory_resource &alloc() {return my_alloc;}
 
  private:
+   std::unique_ptr<keryx_memory_resource> owned_alloc;
    keryx_memory_resource &my_alloc;
    struct PImpl;
    keryx_unique_ptr<PImpl> me;

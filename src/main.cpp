@@ -6,10 +6,7 @@
 #include <benchmark/benchmark.h>
 #include <boost/container/pmr/polymorphic_allocator.hpp>
 #include <boost/container/pmr/unsynchronized_pool_resource.hpp>
-#include <boost/lockfree/queue.hpp>
-#include <boost/lockfree/spsc_queue.hpp>
 #include <chrono>
-#include <queue>
 
 using Timer = std::chrono::system_clock;
 using TimeStamp = Timer::time_point;
@@ -23,13 +20,11 @@ struct SimpleEvent : public Event {
    TimeStamp ts;
 };
 
-template <class ET>
-class SimpleStream {
+template <class ET> class SimpleStream {
  public:
    using EventType = ET;
-   
-   static EventPtr clone_event(ET const &sev,
-                        keryx_memory_resource &mem)  {
+
+   static EventPtr clone_event(ET const &sev, keryx_memory_resource &mem) {
       auto buffer = mem.allocate(sizeof(ET));
       return {new (buffer) ET(sev), [&mem](Event *ev) {
                  auto sev = (ET *)ev;
@@ -38,8 +33,7 @@ class SimpleStream {
               }};
    }
 
-   static SnapshotHandlerPtr
-   make_snapshot_handler(keryx_memory_resource &mem) {
+   static SnapshotHandlerPtr make_snapshot_handler(keryx_memory_resource &mem) {
       auto buffer = mem.allocate(sizeof(NullSnapshotHandler));
       return {new (buffer) NullSnapshotHandler(), [&mem](SnapshotHandler *h) {
                  h->~SnapshotHandler();
@@ -60,10 +54,9 @@ static void alloc(benchmark::State &state) {
 BENCHMARK(alloc);
 
 static void publish(benchmark::State &state) {
-   boost::container::pmr::unsynchronized_pool_resource rsrc;
-   Broker b(rsrc);
-
    using Stream = SimpleStream<SimpleEvent>;
+
+   Broker b;
    Producer<Stream> p{b};
    Consumer<Stream> c{b, [](auto const &) {}};
 
@@ -76,9 +69,7 @@ static void publish(benchmark::State &state) {
 BENCHMARK(publish);
 
 void vg_workout() {
-   boost::container::pmr::unsynchronized_pool_resource rsrc;
-   Broker b(rsrc);
-
+   Broker b;
    using Stream = SimpleStream<SimpleEvent>;
    Producer<Stream> p{b};
    Consumer<Stream> c{b, [](auto const &) {}};

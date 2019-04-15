@@ -4,6 +4,7 @@
 #include "ProducerImpl.h"
 #include "TopicImpl.h"
 #include <variant>
+#include <boost/container/pmr/unsynchronized_pool_resource.hpp>
 
 namespace keryx {
 
@@ -79,9 +80,14 @@ struct Broker::PImpl {
    }
 };
 
+Broker::Broker()
+    : owned_alloc(new boost::container::pmr::unsynchronized_pool_resource()),
+      my_alloc(*owned_alloc),
+      me(keryx_allocate_unique<PImpl>(keryx_pmr<PImpl>{&my_alloc}, my_alloc)) {}
+
 Broker::Broker(keryx_memory_resource &alloc)
-    : my_alloc(alloc),
-      me(keryx_allocate_unique<PImpl>(keryx_pmr<PImpl>{&alloc}, alloc)) {}
+    : owned_alloc(), my_alloc(alloc),
+      me(keryx_allocate_unique<PImpl>(keryx_pmr<PImpl>{&my_alloc}, my_alloc)) {}
 
 Broker::~Broker() {}
 
@@ -98,7 +104,7 @@ Broker::make_producer(SnapshotHandlerPtr &&snapshot_handler,
 }
 
 void Broker::publish(ProducerImpl &p, EventPtr &&ev) {
-   enqueue(me->pending_actions, Publish{&p,std::move(ev)});
+   enqueue(me->pending_actions, Publish{&p, std::move(ev)});
 }
 
 void Broker::destroy_producer(ProducerImpl &p) {
@@ -115,7 +121,7 @@ ConsumerImpl &Broker::make_consumer(StreamFilterImpl const &f,
 }
 
 void Broker::destroy_consumer(ConsumerImpl &c) {
-   c.notify = [] (auto const&) {};
+   c.notify = [](auto const &) {};
    enqueue(me->pending_actions, DestroyConsumer{&c});
 }
 
@@ -127,8 +133,6 @@ void Broker::do_work() {
    }
 }
 
-void enqueue(keryx_action_queue &q, Action &&a) {
-   q.push(std::move(a));
-}
+void enqueue(keryx_action_queue &q, Action &&a) { q.push(std::move(a)); }
 
 } // namespace keryx
