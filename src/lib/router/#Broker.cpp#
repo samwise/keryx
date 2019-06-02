@@ -1,0 +1,60 @@
+#include "Broker.h"
+#include <functional>
+#include <map>
+namespace keryx {
+
+class ISynopsizer;
+
+struct StreamFilter {};
+
+struct Broker::Neighbour {
+   NodeID id;
+   NeighbourKind kind;
+   INode *node;
+};
+
+struct Broker::Stream {
+   Neighbour src;
+   SubID sub_id;
+   std::vector<EventHandler> local_subscribers;
+   std::vector<INode *> remote_subscriberes;
+   std::unique_ptr<ISynopsizer> synopsizer;
+   IStreamDesc &stream_desc;
+   StreamName const name;
+};
+
+enum class Broker::NeighbourKind { SELF, CHILD, PARENT, SIBLING };
+
+struct Broker::LocalSubscription {
+   StreamFilter filter;
+   EventHandler handler;
+};
+
+struct Broker::PImpl {
+   PImpl
+   NodeID my_id;
+   std::map<StreamID, std::unique_ptr<Stream>> streams;
+   std::map<NodeID, Neighbour> neighbours;
+};
+
+Broker::Broker(NodeID id) : me(new PImpl(id)) {}
+Broker::~Broker() {}
+
+void Broker::set_parent(NodeID id, INode &n) {
+   clear_parent();
+
+   add_neighbour(std::make_unique<Neighbour>{id, NeighbourKind::PARENT, &n});
+}
+
+void Broker::add_neighbour(std::unique_ptr<Neighbour> &&n) {
+   for (auto &p : me->streams) {
+      auto &stream_id = p.first;
+      auto &stream = *p.second;
+      if (routes_to(stream.kind, n->kind))
+         n->node->advertise_remote_stream(me->my_id, stream_id, stream.name,
+                                          stream.stream_desc);
+   }
+   me->neighbours.emplace_back(std::move(n));
+}
+
+} // namespace keryx

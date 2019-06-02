@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Broker.h"
+#include "OldBroker.h"
 #include "TopicImpl.h"
 
 namespace keryx {
@@ -10,7 +10,7 @@ class Producer {
  public:
    using EventType = typename Stream::EventType;
 
-   Producer(Broker &b,
+   Producer(OldBroker &b,
             StreamName const&name = {},
             std::vector<EventType const*> const &initial_snapshot = {}) :
       broker(b),
@@ -35,7 +35,7 @@ class Producer {
       return result;
    }
 
-   Broker &broker;
+   OldBroker &broker;
    ProducerImpl &producer;
 };
 

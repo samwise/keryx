@@ -1,4 +1,4 @@
-#include "lib/broker/Broker.h"
+#include "lib/broker/OldBroker.h"
 #include "lib/broker/Consumer.h"
 #include "lib/broker/Producer.h"
 #include "lib/broker/broker_common.h"
@@ -56,7 +56,7 @@ BENCHMARK(alloc);
 static void publish(benchmark::State &state) {
    using Stream = SimpleStream<SimpleEvent>;
 
-   Broker b;
+   OldBroker b;
    Producer<Stream> p{b};
    Consumer<Stream> c{b, [](auto const &) {}};
 
@@ -69,7 +69,7 @@ static void publish(benchmark::State &state) {
 BENCHMARK(publish);
 
 void vg_workout() {
-   Broker b;
+   OldBroker b;
    using Stream = SimpleStream<SimpleEvent>;
    Producer<Stream> p{b};
    Consumer<Stream> c{b, [](auto const &) {}};

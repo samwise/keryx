@@ -1,5 +1,5 @@
 #pragma once
-#include "Broker.h"
+#include "OldBroker.h"
 #include "broker_common.h"
 
 namespace keryx {
@@ -20,19 +20,19 @@ template <class Stream> class Consumer {
    using EventType = typename Stream::EventType;
 
    template <class Filter, class Handler>
-   Consumer(Broker &b, Filter const &f, Handler const &h)
+   Consumer(OldBroker &b, Filter const &f, Handler const &h)
        : broker(b), consumer(broker.make_consumer({typeid(Stream), f},
                                                   make_untyped_handler(h))) {}
 
    template <class Handler>
-   Consumer(Broker &b, StreamName const &name, Handler const &h)
+   Consumer(OldBroker &b, StreamName const &name, Handler const &h)
        : broker(b),
          consumer(broker.make_consumer(
              {typeid(Stream), [name](auto const &n) { return name == n; }},
              make_untyped_handler(h))) {}
 
    template <class Handler>
-   Consumer(Broker &b, Handler const &h)
+   Consumer(OldBroker &b, Handler const &h)
        : broker(b), consumer(broker.make_consumer(
                         {typeid(Stream), [](auto const &) { return true; }},
                         make_untyped_handler(h))) {}
@@ -54,7 +54,7 @@ template <class Stream> class Consumer {
       };
    }
 
-   Broker &broker;
+   OldBroker &broker;
    ConsumerImpl &consumer;
 }; // namespace keryx
 

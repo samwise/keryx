@@ -7,11 +7,11 @@ namespace keryx {
 
 class StreamDescriptorRegistry;
 
-class Broker {
+class OldBroker {
  public:
-   Broker();
-   Broker(keryx_memory_resource &alloc);
-   ~Broker();
+   OldBroker();
+   OldBroker(keryx_memory_resource &alloc);
+   ~OldBroker();
 
    ProducerImpl &make_producer(SnapshotHandlerPtr &&, TopicImpl const &,
                                keryx_vec<EventPtr> const &initial_snapshot);
